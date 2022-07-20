@@ -80,7 +80,6 @@ def main():
                     file = "data.csv"
                 addTeam(teams)
                 saveTeams(file, teams)
-                break
             # return to beginning if erroneous input
             else:
                 print("Please enter an integer")

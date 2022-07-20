@@ -1,8 +1,8 @@
 from ctypes import sizeof
 from multiprocessing.sharedctypes import Value
 from unicodedata import name
-from competitor import Competitor, Team, IndividualPro, IndividualCasual
-from bracket import Bracket, Matchup
+from competitor import Team, IndividualPro, IndividualCasual
+from bracket import Bracket
 from os.path import exists
 import os
 import re

@@ -1,7 +1,3 @@
-from ctypes import sizeof
-from fnmatch import fnmatchcase
-from multiprocessing.sharedctypes import Value
-from unicodedata import name
 from competitor import Team, IndividualPro, IndividualCasual
 from bracket import Bracket
 from os.path import exists
@@ -15,19 +11,21 @@ import logging
 # - Implement a method to sort teams by seed***/DONE/***
 # - Find a way to organize the teams so that all matchups and potential matchups can be shown***/DONE/***
 
-'''
-main method
-
-'''
 def main():
+    '''
+    main method
+
+    '''
     # creat log file for this program
     logging.basicConfig(filename="tournament.log", level=logging.DEBUG, format='%(asctime)s :: %(message)s')
     
+    # Welcome message
     print("*** Welcome to the Tournament Bracket Creator! ***")
     teams = []
     
-    # put code inside a while loop to allow user to correct inputs
+    # put code inside a while loop to allow user to try again if they make input errors
     while True:
+        # prompt user to select a mode
         print("\nWhat would you like to do today?")
         print("\t1) Create a new tournament list")
         print("\t2) Edit an existing tournament list")
@@ -35,8 +33,10 @@ def main():
         print("\t4) Quit")
         user_choice = int(input("\n>>> "))
         if user_choice == 4:
+            # breaks out of while loop, ends program
             break
         elif user_choice == 3:
+            # creates a bracket from an existing file
             print("\nPlease enter a filename or filepath:")
             file = input("\n>>> ")
             b = bracketMaker(file)
@@ -71,15 +71,26 @@ def main():
                     saveTeams(file,teams)
                     break
 
-            # create new file (don't overwrite existing files)
             elif user_choice == 1:
-                i = 0
-                if exists("data.csv"):
-                    while exists("data" + str(i) + ".csv"):
-                        i += 1
-                    file = "data" + str(i) + ".csv"
+            # create new file (don't overwrite existing files)
+                while True:
+                    print("\nInput a filename or press return if you want a default name.\n")
+                    cust = input("\n>>> ")
+                    if exists(fileAdjust(cust)):
+                        print("\nThat file already exists. Please choose a different name.\n")
+                        continue
+                    break
+                if cust == "":
+                    # provide default name
+                    i = 0
+                    if exists("data.csv"):
+                        while exists("data" + str(i) + ".csv"):
+                            i += 1
+                        file = "data" + str(i) + ".csv"
+                    else:
+                        file = "data.csv"
                 else:
-                    file = "data.csv"
+                    file = fileAdjust(cust)
                 addTeam(teams)
                 print("Filename:",file)
                 saveTeams(file, teams)
@@ -98,7 +109,7 @@ def main():
             break
     
     # nice closing message for the program
-    print("*** Goodbye! Have a great day! ***")
+    print("\n*** Goodbye! Have a great day! ***\n")
 
 def bracketMaker(fname) -> Bracket:
     '''
@@ -125,7 +136,7 @@ def bracketMaker(fname) -> Bracket:
     tname = str(input("\n>>> "))
     print()
     brack = Bracket(teams, tname)
-    brack.sortTeams()
+    brack.sortMatchups()
     return brack          
 
 def seedTeams(lst_teams):
@@ -260,6 +271,7 @@ def addTeam(lst_teams):
     Returns None.
     
     '''
+    print("\n***NOTE: Teams are seeded by order of entry into list.***\n")
     while True:
         print("\nWill this tournament involve teams or individual competitors?")
         print("\t1) Team")
@@ -283,34 +295,32 @@ def addTeam(lst_teams):
         else:
             term = "person"
 
+        # user input determines which type of object it will be
+        if comp_type == 2:
+            while True:
+                print("\nPlease select the option that best applies to this tournament:")
+                print("\t2) Casual")
+                print("\t3) Professional")
+                comp_type = int(input(">>> "))
+                if comp_type == 2 or comp_type == 3:
+                    break
+                else:
+                    print("\nPlease selected one of the presented options (type '2', or '3').")
+        
+        # query is unnecessary for teams
+        elif comp_type == 1:
+            pass
+
+        # break out of function if user wants to quit
+        elif comp_type == 0:
+            return None
+        else:
+            print("\nPlease selected one of the presented options (type '1', '2', or '3').")
+            continue
         break
 
     while True:
         while True:
-            # user input determines which type of object it will be
-            if comp_type == 2:
-                while True:
-                    print("\nPlease select the option that best applies to this tournament:")
-                    print("\t2) Casual")
-                    print("\t3) Professional")
-                    comp_type = int(input(">>> "))
-                    if comp_type == 2 or comp_type == 3:
-                        break
-                    else:
-                        print("\nPlease selected one of the presented options (type '2', or '3').")
-        
-            # query is unnecessary for teams
-            elif comp_type == 1:
-                pass
-
-            # break out of function if user wants to quit
-            elif comp_type == 0:
-                return None
-            else:
-                print("\nPlease selected one of the presented options (type '1', '2', or '3').")
-                continue
-            
-        
             # Ask for name, check for commas
             while True:
                 try:
@@ -373,37 +383,17 @@ def addTeam(lst_teams):
                     break
 
             # seed (if applicable)
-            while True:
-                print("\nHas this " + term + " been assigned a seed in the tournament?")
-                print("\tYes (Y)")
-                print("\tNo (N)")
-                y_n = input(">>> ").lower()
-                if y_n == "no" or y_n == "n":
-                    sd = 1
-                    if len(lst_teams) == 0:
-                        pass
-                    else:
-                        sd_set = set()
-                        for tm in lst_teams:
-                            sd_set.add(tm.getSeed())
-                        sd_list = sorted(sd_set)
-                        for elem in sd_list:
-                            if elem == sd:
-                                sd += 1
-                            else:
-                                break
-                    break
-                else:
-                    print("\nPlease enter the seed.\nType an integer value.")
-                    try:
-                        sd = int(input(">>> "))
-                        if type(sd) != int:
-                            raise ValueError
-                    except ValueError as ve:
-                        print("**ERROR: MUST ENTER AN INTEGER VALUE!**")
-                        logging.error("Tried to enter a non-integer as a seed... Trying again...")
-                    except Exception as e:
-                        print("System ran into error.")
+            sd = 1
+            if len(lst_teams) == 0:
+                pass
+            else:
+                sd_set = set()
+                for tm in lst_teams:
+                    sd_set.add(tm.getSeed())
+                sd_list = sorted(sd_set)
+                for elem in sd_list:
+                    if elem == sd:
+                        sd += 1
                     else:
                         break
 

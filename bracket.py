@@ -1,4 +1,3 @@
-from abc import ABC, abstractmethod
 from competitor import Team, IndividualCasual, IndividualPro
 
 class Matchup:
@@ -83,11 +82,13 @@ class Bracket:
         '''
         matchupMaker
 
-        This function sorts the team list to make it easier to properly implement the bracketMaker method.
+        This function creates matchups based on seeding. For non-full brackets, empty "BYE" teams are created and matched with
+        the highest remaining seed until the bracket can be properly filled.
 
         Returns list of matchups.
 
         '''
+        self.sortTeams()
         matches = []
         l = self._size // 2
         for i in range(l):
@@ -112,7 +113,26 @@ class Bracket:
         '''
         sortTeams
 
-        This function sorts the team list to make it easier to properly implement the bracketMaker method.
+        This function sorts the participants list to make it easier to properly implement the bracketMaker method.
+
+        Returns None.
+
+        '''
+        temp = []
+        for p in self._participants:
+            temp.append(p)
+        for i in range(len(self._participants)):
+            for t in temp:
+                if t.getSeed() == i + 1:
+                    break
+            self._participants[i] = t
+        
+
+    def sortMatchups(self):
+        '''
+        sortMatchups
+
+        This function sorts the matchup list to make it easier to properly implement the bracketMaker method.
 
         Returns None.
 
@@ -125,8 +145,8 @@ class Bracket:
             half = len(self._matchups) // 2
             for m in self._matchups:
                 temp.append(m)
-            self._matchups[1] = temp[-2]
-            self._matchups[-2] = temp[1]
+            self._matchups[1] = temp[-1]
+            self._matchups[-1] = temp[1]
             self._matchups[2] = temp[half]
             self._matchups[half] = temp[2]
 

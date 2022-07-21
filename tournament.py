@@ -1,4 +1,5 @@
 from ctypes import sizeof
+from fnmatch import fnmatchcase
 from multiprocessing.sharedctypes import Value
 from unicodedata import name
 from competitor import Team, IndividualPro, IndividualCasual
@@ -45,10 +46,10 @@ def main():
             if user_choice == 2:
                 print("\nPlease enter a filename or filepath:")
                 file = input("\n>>> ")
-                teams = loadTeams(file)
+                teams_load = loadTeams(file)
                 while True:
                     print("\n*** YOUR TOURNAMENT ***")
-                    printTeams(teams)
+                    printTeams(teams_load)
                     print("\nWhat would you like to do with this tournament list?")
                     print("\t1) Add a new competitor")
                     print("\t2) Remove a competitor")
@@ -56,11 +57,12 @@ def main():
                     e_choice = input("\n>>> ")
                     if e_choice == "1":
                         # add competitor to list
+                        teams = teams_load
                         addTeam(teams)
                     elif e_choice == "2":
                         # remove competitor
-                        removeTeam(teams)
-                        os.remove(file)
+                        teams = removeTeam(teams_load)
+                        removeFile(file)
                     elif e_choice == "3":
                         break
                     else:
@@ -79,6 +81,7 @@ def main():
                 else:
                     file = "data.csv"
                 addTeam(teams)
+                print("Filename:",file)
                 saveTeams(file, teams)
             # return to beginning if erroneous input
             else:
@@ -88,8 +91,8 @@ def main():
         print("\nWould you like to return to the main menu?")
         print("\tY - Yes (Return to main menu)")
         print("\tN - No (Quit program)")
-        c = input("\n>>> ")
-        if c == 'Y' or c == 'y':
+        c = input("\n>>> ").lower()
+        if c == 'yes' or c == 'y':
             continue
         else:
             break
@@ -97,7 +100,7 @@ def main():
     # nice closing message for the program
     print("*** Goodbye! Have a great day! ***")
 
-def bracketMaker(file) -> Bracket:
+def bracketMaker(fname) -> Bracket:
     '''
     bracketMaker
 
@@ -106,14 +109,21 @@ def bracketMaker(file) -> Bracket:
     Returns a bracket.
 
     '''
+    # correct for user not entering file extension
+    file = fileAdjust(fname)
 
     teams = loadTeams(file)
     
+    if len(teams) == 0:
+        print("File is empty. Try again...")
+        return None
+
     if teams[0].getSeed() == 0:
         seedTeams(teams)
 
     print("\nWhat is the name of this Tournament?")
-    tname = str(input(">>> "))
+    tname = str(input("\n>>> "))
+    print()
     brack = Bracket(teams, tname)
     brack.sortTeams()
     return brack          
@@ -130,11 +140,11 @@ def seedTeams(lst_teams):
     print("Do you want the seeding done automatically (seeds assigned in order of entry), or would you like to set the seeds manually?\n")
     print("\t1) Auto (order of entry)")
     print("\t2) Manual")
-    choice = int(input("\n>>> "))
-    if choice == 1:
+    choice = input("\n>>> ")
+    if choice == "1":
         for i in range(len(lst_teams)):
             lst_teams[i]._seed = i + 1
-    elif choice == 2:
+    elif choice == "2":
         for i in range(len(lst_teams)):
             while True:
                 print("What seed should be assigned to", lst_teams[i].getName(), "?")
@@ -154,7 +164,7 @@ def seedTeams(lst_teams):
                 else:
                     lst_teams[i].setSeed(sd)
 
-def loadTeams(file) -> list:
+def loadTeams(fname) -> list:
     '''
     loadTeams
 
@@ -163,8 +173,7 @@ def loadTeams(file) -> list:
     Returns list of Competitors.
 
     '''
-    if file[-4:] != ".csv":
-        file += ".csv"
+    file = fileAdjust(fname)
     lst_teams = []
     if not exists(file):
         return lst_teams
@@ -183,7 +192,21 @@ def loadTeams(file) -> list:
                 lst_teams.append(team)
         return lst_teams
 
-def saveTeams(file, lst_teams):
+def fileAdjust(fname) -> str:
+    '''
+    fileAdjust
+    
+    This function adjusts the filename if no file extension is given
+
+    Returns a string
+    
+    '''
+    if fname[-4:] != ".csv":
+        return fname + ".csv"
+    else:
+        return fname
+
+def saveTeams(fname, lst_teams):
     '''
     saveTeams
 
@@ -192,6 +215,7 @@ def saveTeams(file, lst_teams):
     Returns None.
 
     '''
+    file = fileAdjust(fname)
     with open(file, "w") as f:
         for team in lst_teams:
             if type(team) == Team:
@@ -202,6 +226,18 @@ def saveTeams(file, lst_teams):
                 f.write("Casual," + team._name + "," + str(team._seed) + "," + str(team._age) + "," + team._city + "," + team._state + ",\n")
             else:
                 pass
+
+def removeFile(fname):
+    '''
+    removeFile
+    
+    This function removes a designated file
+    
+    Returns None
+    
+    '''
+    file = fileAdjust(fname)
+    os.remove(file)
 
 def printTeams(lst_teams):
     '''
@@ -341,8 +377,8 @@ def addTeam(lst_teams):
                 print("\nHas this " + term + " been assigned a seed in the tournament?")
                 print("\tYes (Y)")
                 print("\tNo (N)")
-                y_n = str(input(">>> "))
-                if y_n == "N" or y_n == "n":
+                y_n = input(">>> ").lower()
+                if y_n == "no" or y_n == "n":
                     sd = 1
                     if len(lst_teams) == 0:
                         pass
@@ -399,19 +435,19 @@ def addTeam(lst_teams):
         print("\nWould you like to add another participant?")
         print("\tYes (Y)")
         print("\tNo (N)")                
-        c = input("\n>>> ")
-        if c == 'Y' or c == 'y':
+        c = input("\n>>> ").lower()
+        if c == 'yes' or c == 'y':
             continue
         else:
             return None
 
-def removeTeam(lst_teams):
+def removeTeam(lst_teams) -> list:
     '''
     removeTeams
 
     This function will remove a specified team (prompted by user input) from the tournament list.
 
-    Returns None.
+    Returns list.
 
     '''
     printTeams(lst_teams)
@@ -419,11 +455,11 @@ def removeTeam(lst_teams):
     d_tm = input("\n>>> ").lower()
     new_list = []
     for tm in lst_teams:
-        if tm.getName() == d_tm:
+        if tm.getName().lower() == d_tm:
             pass
         else:
             new_list.append(tm)
-    lst_teams = new_list
+    return new_list
 
 
 

@@ -53,7 +53,8 @@ def main():
                     print("\nWhat would you like to do with this tournament list?")
                     print("\t1) Add a new competitor")
                     print("\t2) Remove a competitor")
-                    print("\t3) Quit")
+                    print("\t3) Reseed the competitors")
+                    print("\t4) Quit")
                     e_choice = input("\n>>> ")
                     if e_choice == "1":
                         # add competitor to list
@@ -64,9 +65,12 @@ def main():
                         teams = removeTeam(teams_load)
                         removeFile(file)
                     elif e_choice == "3":
+                        teams = seedTeams(teams_load, 1)
+                        removeFile(file)
+                    elif e_choice == "4":
                         break
                     else:
-                        print("Please enter 1, 2, or 3.")
+                        print("Please enter 1, 2, 3, or 4.")
                         continue
                     saveTeams(file,teams)
                     break
@@ -139,7 +143,7 @@ def bracketMaker(fname) -> Bracket:
     brack.sortMatchups()
     return brack          
 
-def seedTeams(lst_teams):
+def seedTeams(lst_teams, mode=0):
     '''
     seedTeams
 
@@ -148,32 +152,66 @@ def seedTeams(lst_teams):
     Returns None.
 
     '''
-    print("Do you want the seeding done automatically (seeds assigned in order of entry), or would you like to set the seeds manually?\n")
-    print("\t1) Auto (order of entry)")
-    print("\t2) Manual")
-    choice = input("\n>>> ")
-    if choice == "1":
+    if mode == 0:
         for i in range(len(lst_teams)):
             lst_teams[i]._seed = i + 1
-    elif choice == "2":
-        for i in range(len(lst_teams)):
+    else:
+        while True:
+            in_use = set()
+            print("What seed should be assigned to", lst_teams[0].getName(), "?")
+            print("\nEnter an integer:\n")
+            inp = input(">>> ")
+
+            intlist = set()
+            for i in range(len(lst_teams)):
+                intlist.add(str(i+1))
+
+            # check that user inputs an integer
+            try:
+                if inp not in intlist:
+                    raise ValueError
+            except ValueError as e:
+                print("Please enter a valid integer.")
+                continue
+
+            sd = int(inp)
+
+            if sd > len(lst_teams):
+                print("Please choose an appropriate seed for the tournament size.")
+                continue
+
+            lst_teams[0].setSeed(sd)
+            in_use.add(sd)
+            break
+
+        for i in range(1, len(lst_teams)):
             while True:
                 print("What seed should be assigned to", lst_teams[i].getName(), "?")
                 print("\nEnter an integer:\n")
-                sd = int(input(">>> "))
+                inp = input(">>> ")
+
+                # check that user inputs an integer
+                try:
+                    if inp not in intlist:
+                        raise ValueError
+                except ValueError as e:
+                    print("Please enter a valid integer.")
+                    continue
+
+                sd = int(inp)
+
                 if sd > len(lst_teams):
                     print("Please choose an appropriate seed for the tournament size.")
                     continue
-                dup = False
-                for j in range(len(lst_teams)):
-                    if sd == lst_teams[j].getSeed():
-                        dup = True
-                        break
-                if dup == True:
+                if sd in in_use:
                     print("That seed is already in use, please choose another seed.")
                     continue
                 else:
                     lst_teams[i].setSeed(sd)
+                    in_use.add(sd)
+                    break
+    return lst_teams
+
 
 def loadTeams(fname) -> list:
     '''
@@ -301,7 +339,18 @@ def addTeam(lst_teams):
                 print("\nPlease select the option that best applies to this tournament:")
                 print("\t2) Casual")
                 print("\t3) Professional")
-                comp_type = int(input(">>> "))
+                c_type = input(">>> ")
+
+            # check that user inputs an integer
+                try:
+                    if c_type not in {"2", "3"}:
+                        raise ValueError
+                except ValueError as e:
+                    print("Please enter 2 or 3.")
+                    continue
+                
+                comp_type = int(c_type)
+
                 if comp_type == 2 or comp_type == 3:
                     break
                 else:
@@ -315,7 +364,7 @@ def addTeam(lst_teams):
         elif comp_type == 0:
             return None
         else:
-            print("\nPlease selected one of the presented options (type '1', '2', or '3').")
+            print("\nPlease selected one of the presented options (type '1', '2', or '0').")
             continue
         break
 
@@ -401,10 +450,10 @@ def addTeam(lst_teams):
                 # Team
                 comp = Team(name, city, state, age, sd)
             elif comp_type == 2:
-                # Professional Individual
-                comp = IndividualCasual(name, city, state, age, sd)
-            else:
                 # Casual Individual
+                comp = IndividualCasual(name, city, state, age, sd)
+            elif comp_type == 3:
+                # Professional Individual
                 comp = IndividualPro(name, city, state, age, sd)
             break
     
@@ -431,6 +480,24 @@ def addTeam(lst_teams):
         else:
             return None
 
+def sortTeams(lst_teams) -> list:
+    '''
+    sortTeams
+
+    This function sorts a team list.
+
+    Returns list.
+
+    '''
+    new_lst = []
+    for i in range(len(lst_teams)):
+        for t in lst_teams:
+            if t.getSeed() == i + 1:
+                tm = t
+                break
+        new_lst.append(tm)
+    return new_lst
+
 def removeTeam(lst_teams) -> list:
     '''
     removeTeams
@@ -440,18 +507,18 @@ def removeTeam(lst_teams) -> list:
     Returns list.
 
     '''
-    printTeams(lst_teams)
+    lst_tms = sortTeams(lst_teams)
+    printTeams(lst_tms)
     print("\nPlease enter the Name of the competitor you would like to remove.")
     d_tm = input("\n>>> ").lower()
     new_list = []
-    for tm in lst_teams:
+    for tm in lst_tms:
         if tm.getName().lower() == d_tm:
             pass
         else:
             new_list.append(tm)
+    seedTeams(new_list, 1)
     return new_list
-
-
 
 if __name__ == "__main__":
     main()

@@ -153,7 +153,7 @@ class Bracket:
     def __str__(self):
         sp_s = f"{' ':4}"
         sp_n = f"{' ':30}"
-        sp = f"{' ':12}"
+        sp = f"{' ':22}"
         sd = []
         sd_opp = []
         t_name = []
@@ -214,9 +214,9 @@ class Bracket:
             # line 2
             brk_fmt = ""
             if m[i]._tm2.getName() == "BYE":
-                brk_fmt = f" |\033[4m{m[i]._tm1.getName():>12}\033[0m"
+                brk_fmt = f" |\033[4m{m[i]._tm1.getName():>22}\033[0m"
             else:
-                brk_fmt = f" |\033[4m{'M' + str(i+1) + ' Winner':>12}\033[0m"
+                brk_fmt = f" |\033[4m{'Match ' + str(i+1) + ' Winner':>22}\033[0m"
             sp1 = sp_s + f"{' Match ' + str(i + 1):30}" + " " + brk_fmt
             if i % 2 == 0:
                 sp1 += " "
@@ -232,11 +232,11 @@ class Bracket:
             # line 4
             sp2 = sp_s + " " + sp_n + " "
             if i % 2 == 0:
-                sp2 += (' Match ' + str(f(i))).center(12) + f" |\033[4m{'M' + str(f(i)) + ' Winner':>12}\033[0m"
+                sp2 += (' Match ' + str(f(i))).center(22) + f" |\033[4m{'Match ' + str(f(i)) + ' Winner':>22}\033[0m"
             elif i % 2 != 0:
                 sp2 += sp + " "
             if i % 2 != 0 and i % 4 != 3:
-                sp2 += (' Match ' + str(g(i))).center(12) + f" |\033[4m{'M' + str(g(i)) + ' Winner':>12}\033[0m"
+                sp2 += (' Match ' + str(g(i))).center(22) + f" |\033[4m{'Match ' + str(g(i)) + ' Winner':>22}\033[0m"
             if i in nums and (i % 2 == 0 or i % 8 == 5):
                 sp2 += "|"
             else:
@@ -244,7 +244,7 @@ class Bracket:
             if i in nums2 and i % 2 == 0:
                 sp2 += sp + "|"
             if i % 8 == 3:
-                sp2 += sp + (' Match ' + str(h(i))).center(12) + f" |\033[4m{'M' + str(h(i)) + ' Winner':>12}\033[0m"
+                sp2 += sp + (' Match ' + str(h(i))).center(22) + f" |\033[4m{'Match ' + str(h(i)) + ' Winner':>22}\033[0m"
             if i == cnt - 1:
                 sp2 = ""
             ln = t1 + "\n" + sp1 + "\n" + t2 + "\n" + sp2

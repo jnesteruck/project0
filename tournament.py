@@ -212,7 +212,6 @@ def seedTeams(lst_teams, mode=0):
                     break
     return lst_teams
 
-
 def loadTeams(fname) -> list:
     '''
     loadTeams
@@ -403,6 +402,9 @@ def addTeam(lst_teams):
 
             # ask for city/region, then state/country, check for commas in each
             while True:
+                if comp_type == 2:
+                    city = ""
+                    break
                 try:
                     city = input("\nEnter this " + term + "'s city or region:\n>>> ")
                     check = re.search(",", city)
@@ -418,6 +420,9 @@ def addTeam(lst_teams):
         
             # state/region
             while True:
+                if comp_type == 2:
+                    state = ""
+                    break
                 try:
                     state = input("\nEnter this " + term + "'s state (U.S.A.) or country:\n>>> ")
                     check = re.search(",", state)
@@ -517,7 +522,7 @@ def removeTeam(lst_teams) -> list:
             pass
         else:
             new_list.append(tm)
-    seedTeams(new_list, 1)
+    seedTeams(new_list)
     return new_list
 
 if __name__ == "__main__":
